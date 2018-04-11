@@ -59,7 +59,7 @@ RUN mkdir ${RSERVE_HOME}/R_libs && \
   mkdir -p /tmp/install/gsplot_description_dir && \
   mkdir -p /tmp/install/repgen_description_dir
 
-RUN wget -O /tmp/install/gsplot_description_dir/DESCRIPTION https://raw.githubusercontent.com/USGS-R/gsplot/v${GSPLOT_VERSION}/DESCRIPTION
+RUN wget -O /tmp/install/gsplot_description_dir/DESCRIPTION https://raw.githubusercontent.com/USGS-R/gsplot/v${GSPLOT_VERSION}/DESCRIPTION && \
   Rscript /tmp/install/installPackages.R && \
   Rscript -e "library(devtools);install_url('https://github.com/USGS-R/gsplot/archive/v${GSPLOT_VERSION}.zip', dependencies = F)"
 
