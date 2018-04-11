@@ -17,9 +17,9 @@ RUN apt-get update && \
 
 ENV RSERVE_HOME /opt/rserve
 ENV R_LIBS ${RSERVE_HOME}/R_libs
-ENV PANDOC_VERSION_DEFAULT 1.19.2.1
+ARG PANDOC_VERSION=1.19.2.1
 ARG REPGEN_VERSION=master
-ENV GSPLOT_VERSION_DEFAULT 0.8.1
+ARG GSPLOT_VERSION=0.8.1
 ENV USERNAME ${USERNAME:-rserve}
 ENV PASSWORD ${PASSWORD:-rserve}
 
@@ -39,7 +39,7 @@ COPY run_rserve.sh ${RSERVE_HOME}/bin/
 RUN chmod 755 ${RSERVE_HOME}/bin/run_rserve.sh
 
 # Install Pandoc
-RUN wget -O /tmp/pandoc.deb https://github.com/jgm/pandoc/releases/download/${PANDOC_VERSION:-$PANDOC_VERSION_DEFAULT}/pandoc-${PANDOC_VERSION:-$PANDOC_VERSION_DEFAULT}-1-amd64.deb && \
+RUN wget -O /tmp/pandoc.deb https://github.com/jgm/pandoc/releases/download/${PANDOC_VERSION}/pandoc-${PANDOC_VERSION}-1-amd64.deb && \
   dpkg -i /tmp/pandoc.deb && \
   rm /tmp/pandoc.deb
 
@@ -54,24 +54,22 @@ RUN wget -O /tmp/oberdiek.tds.zip http://mirrors.ctan.org/install/macros/latex/c
 
 USER $USERNAME
 
-# Get Repgen and GSPlot dependency installs
-RUN mkdir -p /tmp/install/gsplot_description_dir && \
-  mkdir -p /tmp/install/repgen_description_dir && \
-  wget -O /tmp/install/installPackages.R https://raw.githubusercontent.com/USGS-R/repgen/${REPGEN_VERSION}/inst/extdata/installPackages.R && \
-  wget -O /tmp/install/gsplot_description_dir/DESCRIPTION https://raw.githubusercontent.com/USGS-R/gsplot/v${GSPLOT_VERSION:-$GSPLOT_VERSION_DEFAULT}/DESCRIPTION && \
-  wget -O /tmp/install/repgen_description_dir/DESCRIPTION https://raw.githubusercontent.com/USGS-R/repgen/${REPGEN_VERSION}/DESCRIPTION
-
-# Install Repgen and GSplot
 RUN mkdir ${RSERVE_HOME}/R_libs && \
   mkdir ${RSERVE_HOME}/work && \
-  export R_LIBS=${RSERVE_HOME}/R_libs && \
-  cd /tmp/install/gsplot_description_dir && \
+  mkdir -p /tmp/install/gsplot_description_dir && \
+  mkdir -p /tmp/install/repgen_description_dir
+
+RUN wget -O /tmp/install/gsplot_description_dir/DESCRIPTION https://raw.githubusercontent.com/USGS-R/gsplot/v${GSPLOT_VERSION}/DESCRIPTION
   Rscript /tmp/install/installPackages.R && \
+  Rscript -e "library(devtools);install_url('https://github.com/USGS-R/gsplot/archive/v${GSPLOT_VERSION}.zip', dependencies = F)"
+
+RUN wget -O /tmp/install/installPackages.R https://raw.githubusercontent.com/USGS-R/repgen/${REPGEN_VERSION}/inst/extdata/installPackages.R && \
+  wget -O /tmp/install/repgen_description_dir/DESCRIPTION https://raw.githubusercontent.com/USGS-R/repgen/${REPGEN_VERSION}/DESCRIPTION && \
   cd /tmp/install/repgen_description_dir && \
   Rscript /tmp/install/installPackages.R && \
-  Rscript -e "library(devtools);install_url('https://github.com/USGS-R/gsplot/archive/v${GSPLOT_VERSION:-$GSPLOT_VERSION_DEFAULT}.zip', dependencies = F)" && \
-  Rscript -e "library(devtools);install_url('https://github.com/USGS-R/repgen/archive/${REPGEN_VERSION}.zip', dependencies = F)" && \
-  rm -rf /tmp/install
+  Rscript -e "library(devtools);install_url('https://github.com/USGS-R/repgen/archive/${REPGEN_VERSION}.zip', dependencies = F)"
+
+RUN rm -rf /tmp/install
 
 EXPOSE 6311
 

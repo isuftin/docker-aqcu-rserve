@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - Travis configuration
 - Updated Repgen ENV in Dockerfile to an ARG and defaulting it to "master"
+### Updated
+- Split up gsplot and repgen installations in Dockerfile. Moved repgen installation
+below gsplot. This allows faster subsequent builds when repgen changes but gsplot
+has not (typical case). Previously, gsplot and repgen were being downloaded and
+installed within the same two RUN blocks, causing extra time to reinstall gsplot
+when it is not necessary
 
 ## [0.0.3] - 2018-03-19
 ### Updated
